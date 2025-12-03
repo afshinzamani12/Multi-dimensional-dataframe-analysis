@@ -31,7 +31,7 @@ docker build -t multidim .
 
 ### Run the program inside docker
 ```bash
-docker run --name multidim_sensor_analysis --rm -v "$(pwd):/Multi-dimensional-sensor-analysis" -p 8000:8000 multidim:latest
+docker run --name multidim_sensor_analysis --rm -v "$(pwd):/Multi-dimensional-dataframe-analysis" -p 8000:8000 multidim:latest
 ```
 
 Review the contents of "Dockerfile". "python3.8-slim-bullseye" was used to that supports installation of debian for livetex (Latex compiler) on the image.
