@@ -1,0 +1,212 @@
+\documentclass{article}
+
+\usepackage[a4paper, margin=2cm]{geometry}
+\usepackage{titlesec}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{float}
+
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection}{1em}{}
+
+\title{Multi-dimensional DataFrames for analysis and manipulation of weather data}
+\author{Afshin Zamani Zakaria}
+\begin{document}
+\maketitle
+
+
+\section[\left]{Overview, aims and scope}
+This project is designed and executed to capture and master the intricate piplines in pandas and create a the big picture of structured data creation manipulation, cleaning, indexing and so on.\\
+\\
+The following bullet points are covered in this project:
+\begin{itemize}
+	\item Creation of multi-dimensional indexes for dataframes both for rows and columns.
+	\item Adding \texttt{timeseries} column to the dataframe.
+	\item Assigning systematic random data to the dataframes using predefined functions.
+	\item Adding columns from predefined dictionaries.
+	\item Merging and concatenation of dataframes.
+	\item Introducing random imperfections to the data using Gaussian distribution.
+	\item Add some irregularities to a string column.
+	\item Use RegEx to clean the introduced irregularities.
+	\item Group data and create descriptive tables based on the existing parameters on the dataframes (using pivot tables and grouping).
+	\item Create plots and bar graphs from the dataframe.
+	\item Create benchmark latex tables and include them in this document (compare pivot vs grouping, masking vs query and dataframe creation timings).
+	\item Create an automated workflow for containerizing the python project that runs and updates the program as well as updating the current latex document.
+\end{itemize}
+
+\section{Index creation and assigning data}
+
+\begin{itemize}
+	\item Create lists of parameters as below for row index:
+	\begin{enumerate}
+		\item \texttt{Location = ['North','South','East','West']}
+		\item \texttt{Sensor = ['S1','S2','S3','S4']}
+		\item \texttt{'time'} as a pandas time series that includes dates "2012-01-01" to "2018-06-01" with a frequency of hour.
+		\item Split the time into am and pm.
+		\item Create two multiindexes one using (Location, Sensor, \texttt{time\_am}) and the other with combination of (Location, Sensor, \texttt{time\_pm}) for rows.		
+	\end{enumerate}
+	\item Create lists as below for column indexes:
+	\begin{enumerate}
+		\item \texttt{data\_type = ['Temperature','Humidity']}
+		\item \texttt{trial = ['First','Second','Third','Fourth']}
+		\item Create two multiindexes for columns from product of ('Temperature', trial) and ('Humidity', trial).
+	\end{enumerate}
+	\item Create four null arrays with the following lengths to create four dataframes:
+	\begin{enumerate}
+		\item Temp\_am = am\_index length * trail length
+		\item Temp\_pm = pm\_index length * trial length
+		\item Humidity\_am = am\_index length * trail length
+		\item Humidity\_pm = pm\_index length * trail length
+	\end{enumerate}
+	\item Create four dataframes (\texttt{df1, df2, df3, df4}) with the created data in the previous step and corresponding row and column indexes.
+	\item Create four dataframes with resetted indexes (These will be used later) (\texttt{df1\_resetted, df2\_resetted, df3\_resetted, df4\_resetted}).
+	
+\end{itemize}
+
+\section{Build functions library for structured random data creation for dataframes}
+
+According to the datasheet of sensors manufacturer, each sensor (\texttt{'S1','S2','S3','S4'}) are behaving differently with some variation during 12 hours of usage. Here is the list:
+\begin{enumerate}
+	\item \texttt{S1}: Exponential (\texttt{a.exp(x)+b})
+	\item \texttt{S2}: Linear (ax+b)
+	\item \texttt{S3}: Logarithm (a.ln(x+1)+b) \hspace{1.5cm} \# added 1 inside the natural log, so the array of \texttt{np.arange(12)}, which starts from 0, would not cause negative sign inside \texttt{ln}.
+	\item \texttt{S4}: Trigonometric (a.$|$cos($\frac{2\pi x}{11}$)$|$+b)\hspace{1cm} \# receives an \texttt{np.arange(12)} and makes a full cycle of 2$\pi$.
+\end{enumerate}
+
+\begin{itemize}
+	\item All sensors are creating temperature variation of 5 degrees Celsius in a day with up to 2.5 degrees actual temperature variation. Also they create a fluctuation (error) of 10 percent in humidity with up to 5 percent of actual humidity variation in 12 hours (Suppose there is no tangible change in the temperature and humidity in a single day).
+	\item Temperature values are in the range of 10 to 60 degrees and Humidity have the values in the range of 0 to 100.
+	\item Each function should take a optional seed and create all of the outputs using that given seed. So, the function will be in the form of \texttt{func(array, 'Temperature', seed=None)}. Seed can be any number in the dataframe so the created temperature and humidity will be unique. However, all trials should be created using the same seed with minimal random variation introduced.
+
+\end{itemize}
+
+\section{Create dataframes using the generated random functions}
+
+\begin{itemize}
+	\item create a dictionary with the keys of "df1", "df2", "df3", "df4" and values as lists like [df1\_resetted, 'Temperature', df1\_t], where \texttt{df1\_t} is the creation time of the dataframe to be measured.
+	\item Create a \texttt{group\_id} column for each dataframe in the dictionary above by \texttt{groupby} method. Each group should have 12 members ID starting from 1 to (\texttt{day*Sensor*Location}).
+	\item record the start time.
+	\item Use a loop iterated in \texttt{trial} and create data for each column using the \texttt{group\_id} column created earlier and function library defined for each sensor type. In this step, use groupby method to fill all the columns of the dataframes with number and print dataframes to verify they are obeying the functions in the library.
+	\item Drop the \texttt{group\_id} column added earlier.
+	\item record the data creation time by deducting the start time from the current time and assign it to the \texttt{df1\_t}, ... defined in the dictionary earlier.
+	\item Restore the hierarchical indexes from the resetted dataframes.
+	\item Merge and concatenate the dataframes (\texttt{df1, df2, df3, df4}) into a single dataframe \texttt{df}. \texttt{df1} and \texttt{df3} should be added horizontally using merge (They are both for the same time with temperature and humidity data, respectively and sharing the same row index). Likely, \texttt{df\_2} and \texttt{df\_4} should be added into \texttt{df\_24}. Later df\_13 and \texttt{df\_24} should be concatenated vertically.
+\end{itemize}
+
+\section{Add "average", "flag" and "Operator" columns to the created dataframes}
+\begin{itemize}
+	\item Add a column named "average" to each of \texttt{df1, df2, df3, df4}, averaging all of the data in trials.
+	\item Add a column named "Condition" to each of the above dataframes based on their average values if their range are in the following bins:\\
+	\texttt{Temp\_bins = [10, 22.5, 35, 47.5, 60]}\\
+	\texttt{Humidity\_bins = [0, 25, 50, 75, 100]}\\
+	and flag them according to the following list:\\
+	\texttt{labels = ['Low','Below average','Above average','High']}
+	\item Add \texttt{Operator} column randomly to \texttt{df1, df2} from the list below:\\
+	\texttt{operators = ['George','Michael','David','Sara','Alison','John']}
+\end{itemize}
+
+\section{Add string irregularities to the \texttt{"Operator"} column and clean these irregularities using RegEx}
+
+\begin{itemize}
+	\item Create irregularity function based on the following criteria:
+	\begin{enumerate}
+		\item Randomly make the whole string uppercase or lowercase.
+		\item Add one or three of the following characters anywhere in the string: space, "\_" or "-"
+		\item Add a random number from the list below to end of the string:\\
+		\texttt{['12','65','23','156','189']}
+		\item Add a special character from the special characters list below:\\
+		\texttt{['@','<>','()','\# ',' ']}
+	\end{enumerate}
+	\item Apply irregularity function to the \texttt{Operator} column in \texttt{df2} and \texttt{df4}.
+	\item Merge and concatenate dataframes (\texttt{df1, df2, df3, df4})
+	
+\end{itemize}
+
+\section{Create descriptive tables by "\texttt{groupby}" and "\texttt{pivot\_table}" methods}
+
+Create the following tables using \texttt{groupby} and \texttt{pivot\_table} methods:
+\begin{enumerate}
+	\item The average and standard deviation of temperature and humidity by year for all sensors.
+	\item The average and standard deviation of temperature and humidity by year for all location.
+	\item The average and standard deviation of temperature and humidity by year for each operator.
+\end{enumerate}
+\vspace{1em}
+Create a bar plot of the pivot tables with error bars and save the plot to "\texttt{output}" directory.
+
+\section{Masking and query benchmarking}
+
+Create the following masks and queries and store their creation time in a dictionary:
+
+\begin{itemize}
+	\item Mask temperatures higher than 35 degrees for columns 1-4 of merged dataframe (\texttt{df}).
+	\item Mask humidity higher than 50 percent for columns 7-11 of merged dataframe (\texttt{df}).
+	\item Use query to filter temperatures higher than 35 degrees for columns 1-4 of the merged dataframe (\texttt{df}).
+	\item Use query to filter the humidity higher than 50 percent in columns 7-11 of the merged dataframe (\texttt{df}).
+\end{itemize}
+
+\section{Creating output \LaTeX tables}
+
+Create the following \LaTeX tables and save them inside output folder in the current directory:
+
+\begin{enumerate}
+	\item \LaTeX table of comparison for the timing of dataframe generation using \texttt{"groupby"} and \texttt{"for loops"}.
+	\item \LaTeX table of comparison for the timing of pivoting and grouping methods.
+	\item \LaTeX table of comparison for the timing of query and masking.
+\end{enumerate}
+
+\section{Create docker image and container from the created files and push them to GitHub}
+\begin{itemize}
+	\item Create \texttt{Dockerfile} for the current project to containerize and push to GitHub.
+	\item Initiate , add and commit all files into a git repository.
+\end{itemize}
+
+\section{Results: plots and benchmark tables}
+
+Here is only the results of graphs and tables from the repo without further discussion of the results and only to prove the automated compiling workflow.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=10cm]{output/plots/Temp_avg_year.pdf}
+	\caption{Average temperature by year line plot.}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=10cm]{output/plots/Temp_avg_year_bar.pdf}
+	\caption{Average temperature by year bar plot.}
+\end{figure}
+
+
+
+\begin{table}[H]
+	\centering
+	\caption{Comparison of timing for normal masking versus query method for dataframes.}
+	\label{df_mask_query}
+	\input{output/tables/df_mask_query.tex}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\caption{Benchmark of the timing for \texttt{groupby} versus \texttt{pivot} methods.}
+	\input{output/tables/df_pivot_group.tex}
+\end{table}
+
+\begin{table}[H]
+	\centering
+	\label{dataframe_creation}
+	\caption{Comparison of the times to create dataframes using cython level \texttt{groupby} and normal python loops (Dates in columns headers are the end dates of the dataframes with starting date fixed to \texttt{'2012-01-01'} and the unit for table is seconds).}
+	\input{output/tables/dataframe_creation_time.tex}
+\end{table}
+
+\section{Conclusions on the benchmark tables}
+
+Here are the main conclusions of the benchmark tables presented earlier. Try to change the \texttt{end\_dates} in the main script (\texttt{multidim\_sensor\_analysis.tex}) to customize the results as the latex will update automatically.
+
+\begin{itemize}
+	\item Masking of dataframes is almost two times faster than \texttt{query} method with more keystrokes trade off.
+	\item There is an identical way to create pivot tables by \texttt{pivot\_table} and \texttt{groupby} method. While \texttt{groupby} method is faster compared to \texttt{pivot\_table}, it needs more lines of code.
+	\item Creation times for small dataframes is almost identical using loops and groupby methods. However, groupby method timing scales almost linearly with the size of the dataframe, while looping method scales exponentially. So, for larger dataframes, using cython level \texttt{groupby} methods pays off.
+	
+\end{itemize}
+
+\end{document}
