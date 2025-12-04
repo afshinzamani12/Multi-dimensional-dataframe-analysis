@@ -214,7 +214,8 @@ for i, (value1, value2) in enumerate(zip(pivot.values(), group.values())):
 from dataset_creation_by_loop import dataframe_loop
 from dataset_creation_groupby import dataframe_groupby
 start_date = '2012-01-01'
-end_dates = ['2012-04-01', '2012-07-01', '2013-07-01','2015-01-01','2019-01-01']
+end_dates = ['2012-04-01 23:00', '2012-07-01 23:00', '2013-07-01 23:00', '2015-01-01 23:00', '2018-01-01 23:00']
+# Remember to include hour (23:00) for the dates. Otherwise it will end up with some empty cells in the dataframes.
 df_loop_t = np.zeros(len(end_dates))
 df_t = np.zeros(len(end_dates))
 for i, date in enumerate(end_dates):

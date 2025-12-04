@@ -11,7 +11,7 @@ def dataframe_loop(arr, index, columns, p = 'Temperature'):
     df_loop_r['group_id'] = df_loop_r.groupby([df_loop_r['time'].dt.date,df_loop_r['Sensor'], df_loop_r['Location']]).ngroup()
     import time
     start = time.time()
-    for col in range(4,7):
+    for col in range(3,7):
         for i in range(int(len(df_loop_r)/12)):
             df_loop_r.iloc[12*i:12*(i+1),col] = func_map[df_loop_r['Sensor'][12*i]](np.arange(12), p, seed=df_loop_r['group_id'][12*i])
     df_loop_t = time.time() - start
